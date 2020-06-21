@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>SB Admin 2 - Dashboard</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="js/bootstrap.min.js" rel="stylesheet">
+    <style>
+        #contentner {
+            border: 1px solid black;
+            background-color: cornflowerblue;
+            width: 400px;
+            height: 300px;
+            padding: 10px;
+            overflow-y: scroll;
+            border-radius: 10px;
+        }
+
+        #contentner1 {
+            border: 1px solid blue;
+            width: 250px;
+            background-color: lightblue;
+            margin-left: 10px;
+            border-radius: 10px;
+            height: 300px;
+            padding: 10px;
+            overflow-y: scroll;
+        }
+
+        #contentner .message {
+            margin-top: auto;
+            margin-bottom: 5px;
+            margin-left: 5px;
+            border-radius: 25px;
+            background-color: #82ccdd;
+            padding: 5px;
+            width: 270px;
+            text-size-adjust: 15;
+            position: relative;
+        }
+
+        #contentner .receive {
+            background-color: #78e08f;
+            border-radius: 25px;
+            padding: 5px;
+            text-align: left;
+            position: relative;
+            text-size-adjust: 15;
+            margin-left: 100px;
+        }
+
+        #contentner p {
+            margin: 5px;
+        }
+
+        #contentner1 p {
+            margin: 5px;
+        }
+        }
+
+        #username,
+        #contentner,
+        #message,
+        #sendMessage {
+            margin-bottom: 5px;
+        }
+
+        #message {
+            width: 335px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body id="page-top">
+
+    <!-- Page Wrapper -->
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        {{> sidebar}}
+        <!-- End of Sidebar -->
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                {{> topbar}}
+                <!-- End of Topbar -->
+
+                <!-- Begin Page Content -->
+                <div class="container-fluid">
+
+                    <fieldset>
+                        <legend>Chatroom Admin</legend>
+
+                        <input type="text" id="username" name="username" value="{{session}}" hidden>
+                        <br>
+                        <form class="form-inline">
+
+                            <div id="contentner">
+                                <!--trong contentner này chúa message show len với một thẻ p-->
+                            </div>
+
+                            <div id="contentner1"></div>
+                        </form>
+                        <br>
+
+                        <div class="input-group">
+
+                            <input id="message" placeholder="Type a message.." width="350">
+                            <span class="input-group-btn">
+                                <button id="sendMessage" class="btn btn-success" type="submit">SEND</button>
+                            </span>
+                        </div>
+
+                    </fieldset>
+
+
+
+
+                </div>
+                <!-- /.container-fluid -->
+
+            </div>
+            <!-- End of Main Content -->
+
+            <!-- Footer -->
+            {{> footer}}
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+
+    </div>
+    <!-- End of Page Wrapper -->
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+
+    <!-- Bootstrap core JavaScript-->
+    <script src="vendor/jquery/jquery.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Core plugin JavaScript-->
+    <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+    <!-- Custom scripts for all pages-->
+    <script src="js/sb-admin-2.min.js"></script>
+
+    <!-- Page level plugins -->
+    <script src="vendor/chart.js/Chart.min.js"></script>
+
+    <!-- Page level custom scripts -->
+    <script src="js/demo/chart-area-demo.js"></script>
+    <script src="js/demo/chart-pie-demo.js"></script>
+
+</body>
+
+</html>
+
+
+
+<script src="js/socket.io.js"></script>
+<script src="vendor/jquery/jquery.min.js"></script>
+<script>
+    $(function () {
+        var username = document.getElementById('username').value;
+
+
+        //Kết nối tới server socket đang lắng nghe
+        var socket = io.connect('http://localhost:3000');
+        $("#contentner1").append("<p class='message'> You have joined the room </p>")
+        socket.emit('new-user', username)
+
+        //Socket nhận data và append vào giao diện
+        socket.on('chat-message', function (data) {
+            console.log(data);
+            $("#contentner").append("<p class='receive'>" + data.username + ":  " + data.message + " (" + data.time + ") </p>")
+
+        })
+
+        socket.on('user-connected', username => {
+            $("#contentner1").append("<p class='message'> " + String(username) + " has joined </p>")
+        })
+        socket.on('disconnected', username => {
+            $("#contentner1").append("<p class='message'> " + String(username) + " has left</p>")
+        })
+
+
+        //Bắt sự kiện click gửi message
+        $("#sendMessage").on('click', function () {
+            var username = $('#username').val();
+            var message = $('#message').val();
+            var date = new Date();
+            var hour = date.getHours();
+            var minute = String(date.getMinutes()).padStart(2, "0");
+            var time = (hour + ":" + minute);
+            if (username == '') {
+                alert('Please Login To Chat');
+
+            } else {
+                $("#contentner").append("<p class='message'> You : " + (message) + "  ("+(time)+") </p>")
+                //Gửi dữ liệu cho socket
+                socket.emit('send-message', {message,time})
+                $('#message').val('');
+            }
+        })
+
+    });
+</script>
+</body>
+
+</html>
